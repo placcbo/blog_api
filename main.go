@@ -2,20 +2,32 @@ package main
 
 import "fmt"
 
-type Post struct{
-	ID int
-	Title string
+type Post struct {
+	ID      int
+	Title   string
 	Content string
-	Author string
+	Author  string
 }
 
 func main() {
-post := Post{
-	ID: 1,
-	Title: "Learning Go",
-	Content: "Go is a great backend language",
-	Author: "Kevin",
-}
+	posts := []Post{
+		{
+			ID:      1,
+			Title:   "Learn golang",
+			Content: "Learn about the blog post API",
+			Author:  "Kevin",
+		},
+		{
+			ID:      2,
+			Title:   "Building APIS",
+			Content: "APIs allow applications to communicate",
+			Author:  "Kevin",
+		},
+	}
 
-fmt.Println(post)
+	for _, post := range posts{
+		fmt.Println(post.Title)
+	}
+
+	
 }
