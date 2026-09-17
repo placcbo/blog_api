@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -26,8 +27,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Welcome to my Blog API")
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "All blog posts")
+func postsHandler(posts []Post) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(posts)
+	}
 }
 
 func main() {
