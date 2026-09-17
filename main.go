@@ -17,7 +17,14 @@ type PostStore struct {
 	nextID int
 }
 
+func newPostStore() *PostStore {
+	return &PostStore{
+		posts:  map[int]Post{},
+		nextID: 1,
+	}
+}
+
 func main() {
-	store := Post{}
+	store := newPostStore()
 	fmt.Println(store)
 }
