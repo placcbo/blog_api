@@ -24,7 +24,9 @@ func newPostStore() *PostStore {
 	}
 }
 
-func main() {
+
+func main(){
 	store := newPostStore()
+
 	fmt.Println(store)
 }
