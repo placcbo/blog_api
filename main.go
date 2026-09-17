@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
 
 type Post struct {
 	ID      int
@@ -15,7 +18,16 @@ func getPostByID(posts []Post, id int) (Post, bool) {
 			return post, true
 		}
 	}
+
 	return Post{}, false
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Welcome to my Blog API")
+}
+
+func postHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "All blog posts")
 }
 
 func main() {
@@ -28,19 +40,25 @@ func main() {
 		},
 		{
 			ID:      2,
-			Title:   "Building APIS",
+			Title:   "Building APIs",
 			Content: "APIs allow applications to communicate",
 			Author:  "Kevin",
 		},
 	}
 
-	post, found:= getPostByID(posts, 10)
-	if found == false{
+	post, found := getPostByID(posts, 10)
+
+	if found {
+		fmt.Println("Found post:")
+		fmt.Println("ID:", post.ID)
+		fmt.Println("Title:", post.Title)
+		fmt.Println("Author:", post.Author)
+	} else {
 		fmt.Println("Post not found")
 	}
-	fmt.Println("Found post:")
-	fmt.Println("ID:", post.ID)
-	fmt.Println("Title:", post.Title)
-	fmt.Println("Author:", post.Author)
 
+	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/posts", postHandler)
+
+	http.ListenAndServe(":8080", nil)
 }
