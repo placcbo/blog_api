@@ -24,9 +24,25 @@ func newPostStore() *PostStore {
 	}
 }
 
+func (s *PostStore) Create(title, body string) Post {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p := Post{
+		ID:    s.nextID,
+		Title: title,
+		Body:  body,
+	}
 
-func main(){
+	s.posts[p.ID] = p
+	return p
+}
+
+func main() {
 	store := newPostStore()
 
-	fmt.Println(store)
+	post := store.Create("Hello World", "My first blog post")
+	post2 := store.Create("Go is Fun", "I am learning Go")
+
+	fmt.Println(post)
+	fmt.Println(post2)
 }
