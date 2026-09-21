@@ -22,27 +22,41 @@ func newPostStore() *PostStore {
 		posts:  map[int]Post{},
 		nextID: 1,
 	}
+
 }
 
 func (s *PostStore) Create(title, body string) Post {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p := Post{
-		ID:    s.nextID,
 		Title: title,
 		Body:  body,
+		ID:    s.nextID,
 	}
 
 	s.posts[p.ID] = p
+	s.nextID++
 	return p
+}
+
+func (s *PostStore) All() []Post {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var out []Post
+	for _, p := range s.posts {
+		out = append(out, p)
+	}
+	return out
 }
 
 func main() {
 	store := newPostStore()
 
-	post := store.Create("Hello World", "My first blog post")
-	post2 := store.Create("Go is Fun", "I am learning Go")
+	store.Create("Hello world", "this is my first blog post")
+	store.Create("why im learning go", "to get a good job someday!")
 
-	fmt.Println(post)
-	fmt.Println(post2)
+	posts := store.All()
+	fmt.Println(posts)
+
 }
