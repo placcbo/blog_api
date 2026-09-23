@@ -1,14 +1,15 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"net/http"
 	"sync"
 )
 
 type Post struct {
-	ID    int
-	Title string
-	Body  string
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
 }
 
 type PostStore struct {
@@ -68,12 +69,16 @@ func (s *PostStore) Update(id int, title, body string) (Post, bool) {
 func main() {
 	store := newPostStore()
 
-	store.Create("golang series", "blog API")
-	store.Create("golang series", "Todo API")
+	store.Create("golang projects todo", "todo api")
+	store.Create("golang projects todo", "blogpost api")
 
-	updatePost, ok := store.Update(1, "books", "homo deus")
-	fmt.Println(updatePost)
-	fmt.Println(ok)
-	fmt.Println(store.getAll())
+	store.getAll()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /posts", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(store.getAll())
+	})
+
+	http.ListenAndServe(":8080", mux)
 
 }
