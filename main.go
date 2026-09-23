@@ -13,58 +13,67 @@ type Post struct {
 
 type PostStore struct {
 	mu     sync.Mutex
-	posts  map[int]Post
+	Posts  map[int]Post
 	nextID int
 }
 
 func newPostStore() *PostStore {
+
 	return &PostStore{
-		posts:  map[int]Post{},
+		Posts:  map[int]Post{},
 		nextID: 1,
 	}
-
 }
 
 func (s *PostStore) Create(title, body string) Post {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	p := Post{
+		ID:    s.nextID,
 		Title: title,
 		Body:  body,
-		ID:    s.nextID,
 	}
-
-	s.posts[p.ID] = p
 	s.nextID++
+	s.Posts[p.ID] = p
 	return p
 }
+func (s *PostStore) getAll() []Post {
+	postsSlice := []Post{}
 
-func (s *PostStore) All() []Post {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	var out []Post
-	for _, p := range s.posts {
-		out = append(out, p)
+	for _, post := range s.Posts {
+		postsSlice = append(postsSlice, post)
 	}
-	return out
+	return postsSlice
 }
 
-func (s *PostStore) Get(id int) (Post, bool) {
+func (s *PostStore) getPost(id int) (Post, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	p, ok := s.posts[id]
+	p, ok := s.Posts[id]
 	return p, ok
+}
+
+func (s *PostStore) Update(id int, title, body string) (Post, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.Posts[id]
+	if !ok {
+		return Post{}, false
+	}
+	p.Title = title
+	p.Body = body
+	s.Posts[p.ID] = p
+	return p, true
+
 }
 
 func main() {
 	store := newPostStore()
 
-	store.Create("Hello world", "this is my first blog post")
-	store.Create("why im learning go", "to get a good job someday!")
+	store.Create("golang series", "blog API")
+	store.Create("golang series", "Todo API")
 
-	post, ok := store.Get(1)
-	fmt.Println(post)
+	updatePost, ok := store.Update(1, "books", "homo deus")
+	fmt.Println(updatePost)
 	fmt.Println(ok)
+	fmt.Println(store.getAll())
 
 }
