@@ -50,13 +50,21 @@ func (s *PostStore) All() []Post {
 	return out
 }
 
+func (s *PostStore) Get(id int) (Post, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.posts[id]
+	return p, ok
+}
+
 func main() {
 	store := newPostStore()
 
 	store.Create("Hello world", "this is my first blog post")
 	store.Create("why im learning go", "to get a good job someday!")
 
-	posts := store.All()
-	fmt.Println(posts)
+	post, ok := store.Get(1)
+	fmt.Println(post)
+	fmt.Println(ok)
 
 }
