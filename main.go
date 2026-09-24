@@ -69,6 +69,18 @@ func (s *PostStore) Update(id int, title, body string) (Post, bool) {
 
 }
 
+func (s *PostStore) Delete(id int) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.Posts[id]; !ok {
+		return false
+	}
+
+	delete(s.Posts, id)
+	return true
+}
+
 func main() {
 	store := newPostStore()
 
@@ -125,34 +137,51 @@ func main() {
 	// Update
 
 	r.Put("/posts/{id}", func(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+		id := chi.URLParam(r, "id")
 
-	idNum, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-		return
-	}
+		idNum, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
 
-	var input struct {
-		Title string `json:"title"`
-		Body  string `json:"body"`
-	}
+		var input struct {
+			Title string `json:"title"`
+			Body  string `json:"body"`
+		}
 
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
-		return
-	}
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
 
-	post, ok := store.Update(idNum, input.Title, input.Body)
+		post, ok := store.Update(idNum, input.Title, input.Body)
 
-	if !ok {
-		http.Error(w, "post not found", http.StatusNotFound)
-		return
-	}
+		if !ok {
+			http.Error(w, "post not found", http.StatusNotFound)
+			return
+		}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
-})
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(post)
+	})
+
+	r.Delete("/posts/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		idNum, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		if !store.Delete(idNum) {
+			http.Error(w, "post not found", http.StatusNotFound)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	})
 
 	http.ListenAndServe(":8080", r)
 
