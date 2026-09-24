@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Post struct {
@@ -72,13 +74,35 @@ func main() {
 	store.Create("golang projects todo", "todo api")
 	store.Create("golang projects todo", "blogpost api")
 
-	store.getAll()
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /posts", func(w http.ResponseWriter, r *http.Request) {
+	r := chi.NewRouter()
+
+	//GET POSTS
+
+	r.Get("/posts", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(store.getAll())
 	})
 
-	http.ListenAndServe(":8080", mux)
+	//POST posts
+
+	r.Post("/posts", func(w http.ResponseWriter, r *http.Request) {
+		var input struct {
+			Title string `json:"title"`
+			Body  string `json:"body"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+
+		p := store.Create(input.Title, input.Body)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(&p)
+
+	})
+
+	http.ListenAndServe(":8080", r)
 
 }
