@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/go-chi/chi/v5"
@@ -99,9 +100,59 @@ func main() {
 		p := store.Create(input.Title, input.Body)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(&p)
+		json.NewEncoder(w).Encode(p)
 
 	})
+
+	r.Get("/posts/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		idNum, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+		post, ok := store.getPost(idNum)
+		if !ok {
+			http.Error(w, "post not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(post)
+
+	})
+
+	// Update
+
+	r.Put("/posts/{id}", func(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	idNum, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	var input struct {
+		Title string `json:"title"`
+		Body  string `json:"body"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	post, ok := store.Update(idNum, input.Title, input.Body)
+
+	if !ok {
+		http.Error(w, "post not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(post)
+})
 
 	http.ListenAndServe(":8080", r)
 
