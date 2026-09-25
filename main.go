@@ -109,6 +109,23 @@ func main() {
 
 	})
 
+	// post blog
+
+	r.Post("/posts", func(w http.ResponseWriter, r *http.Request) {
+		var post struct {
+			ID    int    `json:"id"`
+			Title string `json:"title"`
+			Body  string `json:"body"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+		}
+		p := store.Create(post.Title, post.Body)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(p)
+
+	})
+
 	http.ListenAndServe(":8080", r)
 
 }
