@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi"
 )
@@ -101,10 +103,20 @@ func (s *PostStore) DeletePost(id int) bool {
 	return true
 }
 
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now()
+		next.ServeHTTP(w, r)
+		duration := time.Since(now)
+		fmt.Println(w, r.URL.Path, duration)
+	})
+}
+
 func main() {
 	store := NewPostStore()
 
 	r := chi.NewRouter()
+	r.Use(loggingMiddleware)
 
 	// create post
 
@@ -175,7 +187,7 @@ func main() {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(p)
 	})
 
